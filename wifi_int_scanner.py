@@ -10,9 +10,13 @@ def capture_wifi_packets(interface, packet_count):
 
 def analyze_packets(capture):
     interference_channels = {}
+    packet_count = 0
+    wlan_radio_count = 0
     for packet in capture:
+        packet_count += 1
         try:
             if hasattr(packet,'wlan_radio') and hasattr(packet.wlan_radio, 'channel'):
+                wlan_radio_count += 1
                 channel = int(packet.wlan_radio.channel)
                 if channel not in interference_channels:
                     interference_channels[channel] = 0
@@ -21,8 +25,11 @@ def analyze_packets(capture):
             print(f"Error analyzing packet: {e}")
             continue
 
-    print(f"Interference analysis completed.")
+    print(f"Total packets analyzed: {packet_count}")
+    print(f"Packets with wlan_radio layer: {wlan_radio_count}")
+    print("Interference analysis completed.")
     return interference_channels
+
 
 def save_to_csv(interference_channels, filename):
     with open(filename, mode='w', newline='') as file:
@@ -63,6 +70,10 @@ def main():
     print("Starting packet capture...")
     capture = capture_wifi_packets(interface, packet_count)
     print("Packet capture completed.")
+
+    if not capture:
+        print("No packets captured. Please ensure that your interface is connected")
+        return
 
     print("Analyzing packets...")
     interference_channels = analyze_packets(capture)
